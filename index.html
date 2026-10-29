@@ -1,442 +1,482 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>bell · Ops Engineer</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2338bdf8'/%3E%3Cstop offset='.55' stop-color='%23818cf8'/%3E%3Cstop offset='1' stop-color='%23c084fc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='69' font-size='52' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
-<style>
-  :root {
-    --bg: #070b16;
-    --text: #eef2f9;
-    --dim: rgba(238, 242, 249, .6);
-    --faint: rgba(238, 242, 249, .42);
-    --line: rgba(255, 255, 255, .1);
-    --accent: #7dd3fc;
-    --accent-2: #a5b4fc;
-    --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", Consolas, "Courier New", monospace;
-    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    font-family: var(--sans);
-    color: var(--text);
-    background:
-      radial-gradient(1200px 800px at 85% -10%, rgba(59, 130, 246, .14), transparent 60%),
-      radial-gradient(1000px 700px at -10% 110%, rgba(168, 85, 247, .14), transparent 60%),
-      var(--bg);
-    line-height: 1.6;
-    overflow-x: hidden;
-  }
-
-  /* ===== 背景光斑 ===== */
-  .bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-  .orb { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
-  .orb-1 { width: 480px; height: 480px; left: -130px; top: -110px; background: #4338ca; opacity: .5; animation: drift-1 22s ease-in-out infinite alternate; }
-  .orb-2 { width: 440px; height: 440px; right: -150px; top: 30%; background: #0e7490; opacity: .42; animation: drift-2 26s ease-in-out infinite alternate; }
-  .orb-3 { width: 400px; height: 400px; left: 38%; bottom: -180px; background: #a21caf; opacity: .3; animation: drift-1 30s ease-in-out infinite alternate-reverse; }
-  @keyframes drift-1 { to { transform: translate(70px, 40px) scale(1.1); } }
-  @keyframes drift-2 { to { transform: translate(-60px, -50px) scale(1.08); } }
-
-  .container { max-width: 1000px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
-
-  /* ===== 导航栏 ===== */
-  .nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-    background: rgba(7, 11, 22, .62);
-    border-bottom: 1px solid rgba(255, 255, 255, .08);
-    backdrop-filter: blur(18px) saturate(150%);
-    -webkit-backdrop-filter: blur(18px) saturate(150%);
-  }
-  .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 62px; max-width: 1000px; margin: 0 auto; padding: 0 24px; }
-  .brand { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 17px; letter-spacing: 1px; color: var(--text); text-decoration: none; }
-  .brand-mark { width: 12px; height: 12px; border-radius: 3px; background: linear-gradient(135deg, #38bdf8, #c084fc); box-shadow: 0 0 12px rgba(125, 211, 252, .7); }
-  .nav-links { display: flex; gap: 4px; }
-  .nav-links a { padding: 8px 14px; border-radius: 10px; font-size: 14px; color: var(--dim); text-decoration: none; transition: color .2s, background .2s; }
-  .nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, .08); }
-  .nav-toggle { display: none; place-items: center; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255, 255, 255, .05); color: var(--text); cursor: pointer; }
-  .nav-toggle svg { width: 19px; height: 19px; }
-
-  /* ===== 区块通用 ===== */
-  .section { padding: 92px 0; scroll-margin-top: 70px; }
-  .section-title { display: flex; align-items: baseline; gap: 12px; font-size: 26px; font-weight: 700; margin-bottom: 10px; }
-  .section-title .hash { color: var(--accent); font-family: var(--mono); font-size: 22px; }
-  .section-sub { color: var(--dim); font-size: 14px; margin-bottom: 34px; }
-
-  .glass {
-    background: rgba(255, 255, 255, .05);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-  }
-
-  /* ===== Hero ===== */
-  .hero { padding: 148px 0 40px; }
-  .hero-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 44px; align-items: center; }
-  .hero-eyebrow { font-family: var(--mono); color: var(--accent); font-size: 14px; margin-bottom: 14px; }
-  .hero-name { font-size: 56px; font-weight: 750; line-height: 1.08; letter-spacing: 1px; }
-  .hero-role { font-size: 19px; color: var(--dim); margin-top: 12px; }
-  .hero-desc { color: var(--dim); font-size: 15px; line-height: 1.85; margin-top: 18px; max-width: 470px; }
-  .hero-actions { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
-
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 12px; font-size: 14px; font-weight: 550; text-decoration: none; border: 1px solid transparent; transition: transform .2s, background .2s, border-color .2s, box-shadow .2s; }
-  .btn svg { width: 17px; height: 17px; }
-  .btn-primary { color: #fff; background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 10px 26px rgba(99, 102, 241, .35); }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(99, 102, 241, .5); }
-  .btn-ghost { color: var(--text); background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14); }
-  .btn-ghost:hover { background: rgba(255, 255, 255, .12); transform: translateY(-2px); }
-  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  .hero-avatar-wrap { display: flex; justify-content: center; }
-  .hero-avatar { width: 230px; height: 230px; border-radius: 50%; padding: 4px; background: linear-gradient(135deg, #38bdf8, #818cf8 55%, #c084fc); box-shadow: 0 18px 50px rgba(99, 102, 241, .4); animation: float 6s ease-in-out infinite; }
-  .hero-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid rgba(7, 11, 22, .85); }
-  @keyframes float { 50% { transform: translateY(-10px); } }
-
-  /* ===== 终端卡片 ===== */
-  .terminal { max-width: 660px; margin: 64px auto 0; overflow: hidden; background: rgba(10, 14, 26, .66); border: 1px solid rgba(255, 255, 255, .12); border-radius: 14px; backdrop-filter: blur(18px); box-shadow: 0 20px 50px rgba(0, 0, 0, .4); }
-  .terminal-bar { display: flex; align-items: center; gap: 7px; padding: 11px 15px; background: rgba(255, 255, 255, .05); border-bottom: 1px solid rgba(255, 255, 255, .08); }
-  .t-dot { width: 11px; height: 11px; border-radius: 50%; }
-  .t-red { background: #ff5f57; } .t-yellow { background: #febc2e; } .t-green { background: #28c840; }
-  .t-title { margin-left: 8px; font-size: 12px; font-family: var(--mono); color: var(--faint); }
-  .terminal-body { padding: 17px 19px; font-family: var(--mono); font-size: 13.5px; line-height: 1.95; color: #cdd6e6; }
-  .terminal-body .prompt { color: var(--accent); }
-  .terminal-body .out { color: #e2e8f0; }
-  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--accent); vertical-align: text-bottom; animation: blink 1.1s steps(1) infinite; }
-  @keyframes blink { 50% { opacity: 0; } }
-
-  /* ===== 关于 ===== */
-  .about-text { color: #c6cfdd; font-size: 15px; line-height: 1.95; max-width: 740px; }
-  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 30px; }
-  .feature-card { padding: 24px; transition: transform .2s, border-color .2s; }
-  .feature-card:hover { transform: translateY(-3px); border-color: rgba(125, 211, 252, .3); }
-  .feature-card svg { width: 26px; height: 26px; color: var(--accent); margin-bottom: 13px; }
-  .feature-card h3 { font-size: 16px; margin-bottom: 8px; }
-  .feature-card p { font-size: 13.5px; color: var(--dim); line-height: 1.75; }
-  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
-  .stat-card { padding: 24px 16px; text-align: center; }
-  .stat-num { font-size: 25px; font-weight: 700; font-family: var(--mono); background: linear-gradient(135deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-  .stat-label { font-size: 13px; color: var(--dim); margin-top: 7px; }
-
-  /* ===== 技能 ===== */
-  .skills-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .skill-group { padding: 23px; }
-  .skill-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
-  .skill-group-head svg { width: 20px; height: 20px; color: var(--accent); }
-  .skill-group-head h3 { font-size: 15.5px; }
-  .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-  .tag { padding: 6px 13px; border-radius: 999px; font-size: 13px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); color: #d3dbe8; transition: background .2s, border-color .2s; }
-  .tag:hover { background: rgba(125, 211, 252, .14); border-color: rgba(125, 211, 252, .35); }
-
-  /* ===== 项目 ===== */
-  .projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .project-card { padding: 22px; display: flex; flex-direction: column; min-height: 178px; text-decoration: none; color: var(--text); transition: transform .2s, border-color .2s; }
-  .project-card.real:hover { transform: translateY(-3px); border-color: rgba(125, 211, 252, .35); }
-  .proj-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 13px; }
-  .proj-top svg { width: 24px; height: 24px; color: var(--accent); }
-  .project-card h3 { font-size: 16px; }
-  .project-card p { font-size: 13.5px; color: var(--dim); line-height: 1.7; flex: 1; }
-  .proj-tags { display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
-  .proj-tag { font-size: 11.5px; font-family: var(--mono); color: var(--accent); background: rgba(125, 211, 252, .1); padding: 3px 9px; border-radius: 6px; }
-  .project-card.placeholder { border-style: dashed; align-items: center; justify-content: center; text-align: center; opacity: .7; }
-  .placeholder svg { width: 30px; height: 30px; color: var(--faint); margin-bottom: 11px; }
-  .placeholder h3 { font-size: 15px; color: var(--dim); }
-  .placeholder p { font-size: 13px; color: var(--faint); margin-top: 6px; flex: 0; }
-
-  /* ===== 联系 ===== */
-  .contact-card { text-align: center; padding: 58px 28px; }
-  .contact-card h2 { font-size: 28px; margin-bottom: 12px; }
-  .contact-card p { color: var(--dim); font-size: 15px; margin-bottom: 28px; }
-  .contact-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-
-  /* ===== 页脚 ===== */
-  .footer { border-top: 1px solid rgba(255, 255, 255, .08); padding: 30px 0; margin-top: 40px; position: relative; z-index: 1; }
-  .footer-inner { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--faint); flex-wrap: wrap; gap: 10px; }
-  .footer-inner a { color: var(--dim); text-decoration: none; }
-  .footer-inner a:hover { color: var(--accent); }
-
-  /* ===== 滚动揭示 ===== */
-  .reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
-  .reveal.visible { opacity: 1; transform: none; }
-
-  @media (max-width: 860px) {
-    .nav-toggle { display: grid; }
-    .nav-links { display: none; position: absolute; top: 62px; left: 0; right: 0; flex-direction: column; gap: 2px; padding: 12px 24px 18px; background: rgba(7, 11, 22, .92); border-bottom: 1px solid rgba(255, 255, 255, .08); backdrop-filter: blur(18px); }
-    .nav-links.open { display: flex; }
-    .nav-links a { padding: 11px 14px; font-size: 15px; }
-    .hero { padding: 120px 0 30px; }
-    .hero-grid { grid-template-columns: 1fr; gap: 34px; }
-    .hero-avatar-wrap { order: -1; }
-    .hero-avatar { width: 168px; height: 168px; }
-    .hero-name { font-size: 44px; }
-    .feature-grid, .stats, .skills-grid { grid-template-columns: 1fr; }
-    .projects-grid { grid-template-columns: 1fr; }
-    .section { padding: 70px 0; }
-    .terminal { margin-top: 44px; }
-  }
-  @media (min-width: 560px) and (max-width: 859px) {
-    .feature-grid, .stats, .projects-grid { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-    .reveal { opacity: 1; transform: none; }
-  }
-</style>
+<meta name="description" content="bell，运维工程师。和企业级 Linux 服务器、网络、虚拟化与性能测试打交道：部署、排障、压测、自动化。" />
+<meta name="theme-color" content="#06070a" />
+<meta property="og:title" content="bell · Ops Engineer" />
+<meta property="og:description" content="运维工程师 · 折腾机器的人。Linux、网络、KVM、性能测试。" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://www.ruusu.cn/" />
+<meta property="og:image" content="https://www.ruusu.cn/assets/img/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="bell · Ops Engineer" />
+<meta name="twitter:description" content="运维工程师 · 折腾机器的人。Linux、网络、KVM、性能测试。" />
+<meta name="twitter:image" content="https://www.ruusu.cn/assets/img/og.png" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "bell",
+  "jobTitle": "运维工程师",
+  "description": "运维工程师，和企业级 Linux 服务器、网络、虚拟化与性能测试打交道。",
+  "url": "https://www.ruusu.cn/",
+  "email": "mailto:bell@ruusu.cn",
+  "sameAs": ["https://github.com/Megumi-02", "https://blog.ruusu.cn"],
+  "knowsAbout": ["Linux", "系统运维", "网络", "KVM 虚拟化", "性能测试"]
+}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2338bdf8'/%3E%3Cstop offset='.55' stop-color='%23818cf8'/%3E%3Cstop offset='1' stop-color='%23c084fc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='69' font-size='52' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="assets/css/style.css" />
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+    document.documentElement.classList.add("js");
+  })();
+</script>
 </head>
-<body>
+<body id="top">
 
-<div class="bg" aria-hidden="true">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
+<a class="skip-link" href="#main">跳到主要内容</a>
 
-<!-- ===== 导航 ===== -->
-<header class="nav">
+<div class="noise" aria-hidden="true"></div>
+<div class="spotlight" aria-hidden="true"></div>
+<div class="scroll-progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<header class="nav" id="nav">
   <div class="nav-inner">
-    <a class="brand" href="#top"><span class="brand-mark"></span>bell</a>
+    <a class="brand" href="#top" aria-label="回到顶部">
+      <span class="brand-mark">B</span>
+      <span class="brand-text">bell</span>
+      <span class="brand-tag">Ops</span>
+    </a>
+
     <nav class="nav-links" id="navLinks" aria-label="主导航">
-      <a href="#about">关于</a>
-      <a href="#skills">技能</a>
-      <a href="#projects">项目</a>
-      <a href="#contact">联系</a>
+      <a href="#about" class="nav-link">关于</a>
+      <a href="#duty" class="nav-link">能做什么</a>
+      <a href="#stack" class="nav-link">技能栈</a>
+      <a href="#method" class="nav-link">思路</a>
+      <a href="#projects" class="nav-link">项目</a>
+      <a href="#contact" class="nav-link">联系</a>
     </nav>
-    <button class="nav-toggle" id="navToggle" aria-label="切换菜单" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换到浅色模式" title="切换主题">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2.6v2M12 19.4v2M2.6 12h2M19.4 12h2M5.4 5.4l1.4 1.4M17.2 17.2l1.4 1.4M18.6 5.4l-1.4 1.4M6.8 17.2l-1.4 1.4" />
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 14.6A8.3 8.3 0 0 1 9.4 4 8.5 8.5 0 1 0 20 14.6Z" />
+      </svg>
+    </button>
+
+    <a class="nav-cta" href="#contact">聊聊 <span aria-hidden="true">→</span></a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="打开菜单" aria-expanded="false" aria-controls="navLinks">
+      <span></span><span></span>
     </button>
   </div>
 </header>
 
-<!-- ===== Hero ===== -->
-<section class="hero" id="top">
-  <div class="container">
-    <div class="hero-grid">
-      <div>
-        <p class="hero-eyebrow">// Ops Engineer</p>
-        <h1 class="hero-name">bell</h1>
-        <p class="hero-role">运维工程师 · 折腾机器的人</p>
-        <p class="hero-desc">和 Linux 服务器、网络、虚拟化与性能测试打交道，日常在部署、排障、压测和自动化之间来回切换。做点东西，也顺手记点东西。</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="https://github.com/Megumi-02" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-            GitHub
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="container hero-inner">
+
+      <div class="hero-copy">
+        <p class="status reveal">
+          <span class="pulse" aria-hidden="true"></span>
+          运维工程师 · 折腾机器的人
+        </p>
+
+        <h1 class="hero-title reveal">
+          你好，我是<br />
+          <span class="grad">bell</span><span class="title-dot">.</span>
+        </h1>
+
+        <p class="hero-sub reveal">
+          和 Linux 服务器、网络、虚拟化与性能测试打交道。
+          日常在部署、排障、压测和自动化之间来回切换 ——
+          做点东西，也顺手记点东西。
+        </p>
+
+        <div class="hero-actions reveal">
+          <a class="btn btn-primary" href="#projects">
+            看看我在折腾什么
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </a>
-          <a class="btn btn-ghost" href="https://blog.ruusu.cn" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            博客 · blog.ruusu.cn
+          <a class="btn btn-ghost" href="https://blog.ruusu.cn" target="_blank" rel="noopener">读我的博客</a>
+        </div>
+
+        <dl class="hero-stats reveal">
+          <div>
+            <dt>入行</dt>
+            <dd><span class="num">4</span> 年</dd>
+          </div>
+          <div>
+            <dt>响应</dt>
+            <dd><span class="num">7×24</span></dd>
+          </div>
+          <div>
+            <dt>GitHub</dt>
+            <dd>since <span class="num">2022</span></dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="terminal" aria-hidden="true">
+          <div class="terminal-bar">
+            <span class="tl tl-r"></span><span class="tl tl-y"></span><span class="tl tl-g"></span>
+            <span class="terminal-path">bell@home: ~ — bash</span>
+          </div>
+          <pre class="terminal-body"><code><span class="c-prompt">$</span> whoami
+<span class="c-out">bell · Ops Engineer</span>
+<span class="c-prompt">$</span> cat role.txt
+<span class="c-out">运维工程师 · 折腾机器的人</span>
+<span class="c-prompt">$</span> systemctl status curiosity
+<span class="c-ok">● active (running)</span> <span class="c-dim">since 2022</span>
+<span class="c-prompt">$</span> uptime
+<span class="c-out">always on, still poking around.</span>
+<span class="c-prompt">$</span> <span class="caret"></span></code></pre>
+        </div>
+
+        <div class="float-card">
+          <span class="fc-dot" aria-hidden="true"></span>
+          <span class="fc-label">当前状态</span>
+          <span class="fc-value">待命中 · 欢迎来聊服务器</span>
+        </div>
+      </div>
+
+    </div>
+
+    <a class="scroll-hint" href="#about" aria-label="向下滚动">
+      <span>scroll</span>
+      <span class="scroll-line" aria-hidden="true"></span>
+    </a>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="section" id="about">
+    <div class="container">
+      <p class="sec-label reveal"><span>01</span> 关于</p>
+
+      <div class="about-grid">
+        <h2 class="sec-title reveal">
+          机器不会说谎。<br />答案通常在日志里。
+        </h2>
+
+        <div class="about-body">
+          <p class="reveal">
+            我是 bell，一名运维工程师。平时主要和企业级 Linux 服务器打交道：
+            系统部署、网络与链路配置、KVM 虚拟化与带外管理，
+            以及用 stress-ng、fio、iperf3 之类的工具做性能压测。
+          </p>
+          <p class="reveal">
+            我喜欢把重复的事情自动化 —— 能写成脚本的，就不手动敲第三遍。
+            踩过的坑会记在博客里：一是怕自己忘，二是说不定能帮到正在搜同一条报错的人。
+          </p>
+          <p class="reveal">
+            排障这件事，本质是耐心：先看现象，再看日志，再看指标，最后抓包。
+            大多数「玄学问题」，都能被一条时间线解释清楚。
+          </p>
+
+          <div class="info-cards">
+            <div class="info-card reveal">
+              <span class="ic-label">主战场</span>
+              <span class="ic-value">RHEL / Rocky Linux</span>
+            </div>
+            <div class="info-card reveal">
+              <span class="ic-label">习惯</span>
+              <span class="ic-value">能自动化就不手动</span>
+            </div>
+            <div class="info-card reveal">
+              <span class="ic-label">常出没</span>
+              <span class="ic-value">博客 · GitHub</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DUTY ============ -->
+  <section class="section" id="duty">
+    <div class="container">
+      <div class="sec-head">
+        <p class="sec-label reveal"><span>02</span> 能做什么</p>
+        <p class="sec-note reveal">三件事，做了四年，还在继续做深。</p>
+      </div>
+
+      <div class="duty-grid">
+        <article class="duty-card glow-card reveal">
+          <div class="duty-top">
+            <span class="duty-icon" aria-hidden="true">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="7" rx="2" />
+                <rect x="3" y="13" width="18" height="7" rx="2" />
+                <path d="M7 7.5h.01M7 16.5h.01" />
+              </svg>
+            </span>
+            <span class="duty-idx">/ 01</span>
+          </div>
+          <h3>系统运维</h3>
+          <p>Red Hat / Rocky Linux 服务器的部署、维护、监控与故障排查。从装机、初始化到长期稳定运行。</p>
+          <ul class="tags">
+            <li>RHEL</li><li>systemd</li><li>监控告警</li><li>故障排查</li>
+          </ul>
+        </article>
+
+        <article class="duty-card glow-card reveal">
+          <div class="duty-top">
+            <span class="duty-icon" aria-hidden="true">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="5" r="2.4" />
+                <circle cx="5" cy="18" r="2.4" />
+                <circle cx="19" cy="18" r="2.4" />
+                <path d="M12 7.4v4.1M11 12.6l-4.2 3M13 12.6l4.2 3" />
+              </svg>
+            </span>
+            <span class="duty-idx">/ 02</span>
+          </div>
+          <h3>网络与虚拟化</h3>
+          <p>链路聚合、网卡 Bonding、VLAN 划分，KVM 虚拟化与 IPMI / iLO 带外管理。</p>
+          <ul class="tags">
+            <li>LACP</li><li>Bonding</li><li>KVM</li><li>IPMI</li>
+          </ul>
+        </article>
+
+        <article class="duty-card glow-card reveal">
+          <div class="duty-top">
+            <span class="duty-icon" aria-hidden="true">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12h3.6l2.4-6.2 4 12.4L15.4 12H21" />
+              </svg>
+            </span>
+            <span class="duty-idx">/ 03</span>
+          </div>
+          <h3>性能测试</h3>
+          <p>stress-ng / fio / iperf3 压测，输出可读的性能数据，定位真正的瓶颈在哪一层。</p>
+          <ul class="tags">
+            <li>stress-ng</li><li>fio</li><li>iperf3</li><li>瓶颈分析</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STACK ============ -->
+  <section class="section" id="stack">
+    <div class="container">
+      <div class="sec-head">
+        <p class="sec-label reveal"><span>03</span> 技能栈</p>
+        <p class="sec-note reveal">日常在用的东西，不列没用过的。</p>
+      </div>
+
+      <div class="stack-grid">
+        <div class="stack-card glow-card reveal">
+          <h3><span class="sc-idx">01</span> 操作系统</h3>
+          <ul>
+            <li>Red Hat Enterprise Linux</li>
+            <li>Rocky Linux</li>
+            <li>CentOS</li>
+            <li>Ubuntu</li>
+            <li>Windows Server</li>
+          </ul>
+        </div>
+        <div class="stack-card glow-card reveal">
+          <h3><span class="sc-idx">02</span> 虚拟化与带外</h3>
+          <ul>
+            <li>KVM</li>
+            <li>QEMU</li>
+            <li>IPMI / BMC</li>
+            <li>iLO 带外</li>
+          </ul>
+        </div>
+        <div class="stack-card glow-card reveal">
+          <h3><span class="sc-idx">03</span> 网络</h3>
+          <ul>
+            <li>LACP</li>
+            <li>网卡 Bonding</li>
+            <li>VLAN</li>
+            <li>tcpdump</li>
+            <li>iperf3</li>
+            <li>交换机配置</li>
+          </ul>
+        </div>
+        <div class="stack-card glow-card reveal">
+          <h3><span class="sc-idx">04</span> 测试与工具</h3>
+          <ul>
+            <li>stress-ng</li>
+            <li>fio</li>
+            <li>iperf3</li>
+            <li>Shell</li>
+            <li>Git</li>
+            <li>Python 脚本</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ METHOD ============ -->
+  <section class="section" id="method">
+    <div class="container">
+      <div class="sec-head">
+        <p class="sec-label reveal"><span>04</span> 排障思路</p>
+        <p class="sec-note reveal">玄学问题，通常都能被一条时间线解释清楚。</p>
+      </div>
+
+      <ol class="steps">
+        <li class="step reveal">
+          <span class="step-num">STEP 01</span>
+          <h3>先看现象</h3>
+          <p>什么时候开始、影响谁、能不能复现。先把范围圈小，别急着改配置。</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-num">STEP 02</span>
+          <h3>再翻日志</h3>
+          <p>journalctl、dmesg、应用日志对着时间轴排一遍，异常往往比你以为的更早。</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-num">STEP 03</span>
+          <h3>看指标</h3>
+          <p>CPU、内存、磁盘 IO、网络丢包。确认是资源问题，还是代码在等什么。</p>
+        </li>
+        <li class="step reveal">
+          <span class="step-num">STEP 04</span>
+          <h3>最后抓包</h3>
+          <p>前面都解释不通，就 tcpdump 看链路上到底发生了什么。答案通常很直接。</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ PROJECTS ============ -->
+  <section class="section" id="projects">
+    <div class="container">
+      <div class="sec-head">
+        <p class="sec-label reveal"><span>05</span> 项目与笔记</p>
+        <p class="sec-note reveal">仓库从 GitHub 实时拉取，推上去就会出现在这里。</p>
+      </div>
+
+      <div class="work-list">
+
+        <article class="work-card work-feature glow-card reveal">
+          <a class="work-link" href="https://blog.ruusu.cn" target="_blank" rel="noopener" aria-label="打开 bell 的博客">
+            <div class="work-cover cover-blog">
+              <div class="cover-art art-log" aria-hidden="true">
+                <span class="log-cmd"><b>$</b> tail -f access.log</span>
+                <span class="log-row"><b>10:24:07</b><i>GET /posts/kvm-cpu-pinning</i><em>200</em></span>
+                <span class="log-row"><b>10:24:11</b><i>GET /assets/app.js</i><em>200</em></span>
+                <span class="log-row"><b>10:24:19</b><i>POST /api/health</i><em class="warn">502</em></span>
+                <span class="log-row"><b>10:24:26</b><i>GET /posts/fio-baseline</i><em>200</em></span>
+                <span class="log-cursor"><b>$</b><span class="caret"></span></span>
+              </div>
+            </div>
+            <div class="work-info">
+              <div class="work-top">
+                <h3>bell 的博客 <span class="work-en">/ blog.ruusu.cn</span></h3>
+                <span class="work-arrow" aria-hidden="true">↗</span>
+              </div>
+              <p class="work-desc">
+                排障笔记、压测记录和踩过的坑。写得不勤，但每篇都是真机上调出来的。
+              </p>
+              <ul class="tags">
+                <li>Linux</li><li>网络</li><li>性能</li><li>踩坑记录</li>
+              </ul>
+            </div>
           </a>
+        </article>
+
+        <div class="work-row">
+          <article class="work-card work-todo glow-card reveal">
+            <div class="work-info">
+              <span class="todo-flag">TODO · 01</span>
+              <h3>自动化巡检脚本</h3>
+              <p class="work-desc">
+                把日常巡检写成一条命令：硬件、链路、磁盘、服务状态一次收齐，输出一份能直接发出去的日报。
+              </p>
+              <p class="todo-state">状态：<span class="c-dim">整理中</span><span class="caret"></span></p>
+            </div>
+          </article>
+
+          <article class="work-card work-todo glow-card reveal">
+            <div class="work-info">
+              <span class="todo-flag">TODO · 02</span>
+              <h3>压测数据看板</h3>
+              <p class="work-desc">
+                把 stress-ng / fio / iperf3 的结果统一收进一个页面，跑完就能对比，不用再翻一屏屏的终端输出。
+              </p>
+              <p class="todo-state">状态：<span class="c-dim">排队中</span><span class="caret"></span></p>
+            </div>
+          </article>
         </div>
-      </div>
-      <div class="hero-avatar-wrap">
-        <div class="hero-avatar"><img src="assets/avatar.png" alt="bell 的头像"></div>
+
       </div>
     </div>
+  </section>
 
-    <!-- 终端 -->
-    <div class="terminal reveal">
-      <div class="terminal-bar">
-        <span class="t-dot t-red"></span><span class="t-dot t-yellow"></span><span class="t-dot t-green"></span>
-        <span class="t-title">bell — bash</span>
-      </div>
-      <div class="terminal-body">
-        <div><span class="prompt">bell@home:~$</span> whoami</div>
-        <div class="out">bell</div>
-        <div><span class="prompt">bell@home:~$</span> cat role.txt</div>
-        <div class="out">Ops Engineer</div>
-        <div><span class="prompt">bell@home:~$</span> uptime</div>
-        <div class="out">on GitHub since 2022<span class="cursor"></span></div>
+  <!-- ============ CONTACT ============ -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-panel reveal">
+        <p class="sec-label"><span>06</span> 联系</p>
+        <h2>想聊运维、网络、压测？<br />或者只是打个招呼。</h2>
+        <p class="contact-sub">
+          服务器告警、链路抖动、压测结果看不懂 —— 都可以来信说说。
+          邮件我一般都会回。
+        </p>
+
+        <div class="contact-actions">
+          <a class="btn btn-primary" href="mailto:bell@ruusu.cn">bell@ruusu.cn</a>
+          <button class="btn btn-ghost" id="copyMail" data-mail="bell@ruusu.cn">复制邮箱</button>
+        </div>
+
+        <ul class="socials">
+          <li><a href="https://github.com/Megumi-02" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a></li>
+          <li><a href="https://blog.ruusu.cn" target="_blank" rel="noopener">博客 <span aria-hidden="true">↗</span></a></li>
+          <li><a href="mailto:bell@ruusu.cn">邮件</a></li>
+        </ul>
+
+        <span class="contact-prompt" aria-hidden="true">$ ssh bell@ruusu.cn</span>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ===== 关于 ===== -->
-<section class="section" id="about">
-  <div class="container">
-    <h2 class="section-title reveal"><span class="hash">##</span>关于我</h2>
-    <p class="section-sub reveal">about / who is bell</p>
-    <p class="about-text reveal">我是 bell，一名运维工程师。平时主要和企业级 Linux 服务器打交道，负责系统部署、网络与链路配置、KVM 虚拟化与带外管理，以及用 stress-ng、fio、iperf3 之类的工具做性能压测。喜欢把重复的事情自动化，也会把踩过的坑记在博客里。</p>
+</main>
 
-    <div class="feature-grid">
-      <div class="glass feature-card reveal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>
-        <h3>系统运维</h3>
-        <p>Red Hat / Rocky Linux 服务器的部署、维护、监控与故障排查。</p>
-      </div>
-      <div class="glass feature-card reveal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>
-        <h3>网络与虚拟化</h3>
-        <p>链路聚合、网卡 Bonding、KVM 虚拟化与 IPMI 带外管理。</p>
-      </div>
-      <div class="glass feature-card reveal">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
-        <h3>性能测试</h3>
-        <p>stress-ng / fio / iperf3 压测，输出性能数据与瓶颈分析。</p>
-      </div>
-    </div>
-
-    <div class="stats">
-      <div class="glass stat-card reveal"><div class="stat-num">2022</div><div class="stat-label">加入 GitHub</div></div>
-      <div class="glass stat-card reveal"><div class="stat-num">Ops</div><div class="stat-label">运维工程师</div></div>
-      <div class="glass stat-card reveal"><div class="stat-num">blog.ruusu.cn</div><div class="stat-label">个人博客</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 技能 ===== -->
-<section class="section" id="skills">
-  <div class="container">
-    <h2 class="section-title reveal"><span class="hash">##</span>技能栈</h2>
-    <p class="section-sub reveal">skills / 日常在用的东西</p>
-    <div class="skills-grid">
-      <div class="glass skill-group reveal">
-        <div class="skill-group-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>
-          <h3>操作系统</h3>
-        </div>
-        <div class="tags">
-          <span class="tag">Red Hat Enterprise Linux</span><span class="tag">Rocky Linux</span><span class="tag">CentOS</span><span class="tag">Ubuntu</span><span class="tag">Windows Server</span>
-        </div>
-      </div>
-      <div class="glass skill-group reveal">
-        <div class="skill-group-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
-          <h3>虚拟化与带外</h3>
-        </div>
-        <div class="tags">
-          <span class="tag">KVM</span><span class="tag">QEMU</span><span class="tag">IPMI / BMC</span><span class="tag">iLO 带外</span>
-        </div>
-      </div>
-      <div class="glass skill-group reveal">
-        <div class="skill-group-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>
-          <h3>网络</h3>
-        </div>
-        <div class="tags">
-          <span class="tag">LACP</span><span class="tag">网卡 Bonding</span><span class="tag">VLAN</span><span class="tag">tcpdump</span><span class="tag">iperf3</span><span class="tag">交换机配置</span>
-        </div>
-      </div>
-      <div class="glass skill-group reveal">
-        <div class="skill-group-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg>
-          <h3>测试与工具</h3>
-        </div>
-        <div class="tags">
-          <span class="tag">stress-ng</span><span class="tag">fio</span><span class="tag">iperf3</span><span class="tag">Shell</span><span class="tag">Git</span><span class="tag">Python 脚本</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 项目 ===== -->
-<section class="section" id="projects">
-  <div class="container">
-    <h2 class="section-title reveal"><span class="hash">##</span>项目</h2>
-    <p class="section-sub reveal">projects / 折腾过的东西，陆续搬来</p>
-    <div class="projects-grid" id="projectsGrid"></div>
-  </div>
-</section>
-
-<!-- ===== 联系 ===== -->
-<section class="section" id="contact">
-  <div class="container">
-    <div class="glass contact-card reveal">
-      <h2>保持联系</h2>
-      <p>想找我交流运维、网络、压测，或者只是想打个招呼，都可以从这里找到我。</p>
-      <div class="contact-actions">
-        <a class="btn btn-primary" href="https://github.com/Megumi-02" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          GitHub
-        </a>
-        <a class="btn btn-ghost" href="https://blog.ruusu.cn" target="_blank" rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          博客
-        </a>
-        <!-- 邮箱入口：有邮箱后取消注释
-        <a class="btn btn-ghost" href="mailto:bell@example.com">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-          邮箱
-        </a> -->
-      </div>
-    </div>
-  </div>
-</section>
-
-<footer class="footer">
-  <div class="container">
-    <div class="footer-inner">
-      <span>© <span id="year"></span> bell | <a href="https://beian.miit.gov.cn/" target="_blank" style="color: inherit; text-decoration: none;">皖ICP备2025101620号-1</a></span>
-      <span>Hosted on <a href="https://pages.github.com" target="_blank" rel="noopener noreferrer">GitHub Pages</a> · <a href="#top">回到顶部</a></span>
-    </div>
+<footer class="footer" id="colophon">
+  <div class="container footer-inner">
+    <span>© <span id="year">2026</span> bell</span>
+    <a class="footer-icp" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">皖ICP备2025101620号-1</a>
+    <span class="footer-note">Hosted on <a class="footer-link" href="https://pages.github.com/" target="_blank" rel="noopener">GitHub Pages</a></span>
+    <a href="#top" class="footer-top">回到顶部 ↑</a>
   </div>
 </footer>
 
-<script>
-  // ============ 项目配置：有项目后照格式添加 ============
-  // 字段：name 名称 / desc 描述 / tags 标签 / url 链接（可留空）
-  var PROJECTS = [
-    // { name: 'server-bench', desc: '基于 stress-ng / fio 的服务器压测脚本与报告整理。', tags: ['Shell', 'stress-ng', 'fio'], url: 'https://github.com/Megumi-02/server-bench' },
-    // { name: 'bonding-lab', desc: 'LACP 链路聚合与网卡 Bonding 的配置记录和验证笔记。', tags: ['Network', 'LACP'], url: 'https://github.com/Megumi-02/bonding-lab' }
-  ];
+<div class="toast" id="toast" role="status" aria-live="polite">邮箱已复制</div>
 
-  var ICON_FOLDER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>';
-  var ICON_HAMMER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 12-8.379 8.379a2.12 2.12 0 0 1-3-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/></svg>';
-  var ICON_EXTERNAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>';
+<a class="to-top" id="toTop" href="#top" aria-label="回到顶部">
+  <svg class="to-top-ring" viewBox="0 0 46 46" aria-hidden="true">
+    <circle class="ring-bg" cx="23" cy="23" r="21" />
+    <circle class="ring-fg" id="toTopRing" cx="23" cy="23" r="21" />
+  </svg>
+  <span class="to-top-arrow" aria-hidden="true">↑</span>
+</a>
 
-  var grid = document.getElementById('projectsGrid');
-
-  PROJECTS.forEach(function (p) {
-    var card = document.createElement(p.url ? 'a' : 'div');
-    card.className = 'glass project-card real reveal';
-    if (p.url) { card.href = p.url; card.target = '_blank'; card.rel = 'noopener noreferrer'; }
-    var tagsHtml = p.tags.map(function (t) { return '<span class="proj-tag">' + t + '</span>'; }).join('');
-    card.innerHTML =
-      '<div class="proj-top">' + ICON_FOLDER + (p.url ? ICON_EXTERNAL : '') + '</div>' +
-      '<h3>' + p.name + '</h3><p>' + p.desc + '</p>' +
-      '<div class="proj-tags">' + tagsHtml + '</div>';
-    grid.appendChild(card);
-  });
-
-  // 占位卡：项目上线前显示"建设中"
-  for (var i = 0; i < 2; i++) {
-    var ph = document.createElement('div');
-    ph.className = 'glass project-card placeholder reveal';
-    ph.innerHTML = ICON_HAMMER + '<h3>Coming Soon</h3><p>项目正在路上，敬请期待</p>';
-    grid.appendChild(ph);
-  }
-
-  // ============ 移动端菜单 ============
-  var toggle = document.getElementById('navToggle');
-  var links = document.getElementById('navLinks');
-  toggle.addEventListener('click', function () {
-    var open = links.classList.toggle('open');
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-  links.querySelectorAll('a').forEach(function (a) {
-    a.addEventListener('click', function () {
-      links.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // ============ 滚动揭示 ============
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        io.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
-
-  document.getElementById('year').textContent = new Date().getFullYear();
-</script>
+<script src="assets/js/main.js"></script>
 </body>
 </html>
