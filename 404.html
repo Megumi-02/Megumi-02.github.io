@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>404 · bell</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2338bdf8'/%3E%3Cstop offset='.55' stop-color='%23818cf8'/%3E%3Cstop offset='1' stop-color='%23c084fc'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='69' font-size='52' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/assets/css/style.css" />
+<script>
+  (function () {
+    try {
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.setAttribute("data-theme", "light");
+      }
+    } catch (e) {}
+  })();
+</script>
+<style>
+  body {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: 72px 20px;
+  }
+  .e404 {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 620px;
+  }
+  .e404-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    margin-bottom: 38px;
+  }
+  .e404-code {
+    margin: 0 0 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .e404 h1 {
+    margin: 0;
+    font-size: clamp(30px, 6vw, 44px);
+    line-height: 1.2;
+    letter-spacing: -0.035em;
+  }
+  .e404-sub {
+    margin: 14px 0 0;
+    font-size: 14.5px;
+    line-height: 1.85;
+    color: var(--muted);
+  }
+  .e404-term {
+    margin-top: 30px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, #0c0f16, #080a0f);
+    overflow: hidden;
+  }
+  .e404-term .terminal-body { font-size: 12px; padding: 18px 18px 20px; }
+  .e404-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 30px;
+  }
+  @media (max-width: 520px) {
+    .e404-actions .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body id="top">
+
+<div class="noise" aria-hidden="true"></div>
+<div class="grid-bg" aria-hidden="true"></div>
+
+<main class="e404">
+  <a class="e404-brand" href="/" aria-label="回到主页">
+    <span class="brand-mark">B</span>
+    <span class="brand-text">bell</span>
+    <span class="brand-tag">Ops</span>
+  </a>
+
+  <p class="e404-code">HTTP 404 · Not Found</p>
+  <h1>这条路径不存在。</h1>
+  <p class="e404-sub">可能是链接过期了，也可能是我把文件挪走了。</p>
+
+  <div class="e404-term">
+    <div class="terminal-bar">
+      <span class="tl tl-r"></span><span class="tl tl-y"></span><span class="tl tl-g"></span>
+      <span class="terminal-path">bell@home: ~ — bash</span>
+    </div>
+    <pre class="terminal-body"><code><span class="c-prompt">$</span> ls /this/path
+<span class="c-out">ls: cannot access '/this/path': No such file or directory</span>
+<span class="c-prompt">$</span> <span class="caret"></span></code></pre>
+  </div>
+
+  <div class="e404-actions">
+    <a class="btn btn-primary" href="/">回到主页</a>
+    <a class="btn btn-ghost" href="https://blog.ruusu.cn">去博客</a>
+  </div>
+</main>
+
+</body>
+</html>
